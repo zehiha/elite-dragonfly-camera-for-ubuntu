@@ -1,0 +1,12 @@
+build/
+dist/
+__pycache__/
+*.pyc
+*.log
+*.deb
+redrix-video-watch
+
+# Local rebuild trees and extracted Debian packages. Patches and the generated
+# release deb are kept separately.
+pipewire-build/
+pipewire-libcamera-local/

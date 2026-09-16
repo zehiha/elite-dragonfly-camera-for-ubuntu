@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# libcamera "simple" IPA tuning file for the Hynix hi556 sensor.
+# Target: HP Elite Dragonfly Chromebook / Google Redrix, Intel IPU6.
+#
+# This is an approximate colour correction file. It does not replace a real
+# ColorChecker/libtuning calibration, but it is better than libcamera's generic
+# uncalibrated fallback for this sensor.
+
+%YAML 1.1
+---
+version: 1
+algorithms:
+  - BlackLevel:
+  - Awb:
+  - Ccm:
+      ccms:
+        - ct: 6500
+          ccm: [  1.170,  0.000,  0.000,
+                  0.000,  0.980,  0.000,
+                  0.000,  0.000,  0.950 ]
+  - Adjust:
+  - Agc:
+...

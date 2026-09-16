@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)"
+
+if [[ -d /usr/lib/redrix-camera && "$SCRIPT_DIR" == "/usr/bin" ]]; then
+  APP_DIR="/usr/lib/redrix-camera"
+else
+  APP_DIR="$SCRIPT_DIR"
+fi
+
+usage() {
+  cat <<USAGE
+Usage:
+  redrix-camera help
+  redrix-camera build-libcamera
+  redrix-camera direct [--status|--verify|--disable|--revert]
+  redrix-camera status
+  redrix-camera verify
+  redrix-camera diagnose
+  redrix-camera enable-loopback
+  redrix-camera stop-loopback
+  redrix-camera legacy-status
+  redrix-camera camera-on
+  redrix-camera camera-off
+
+Default recommendation: redrix-camera build-libcamera, then redrix-camera direct.
+USAGE
+}
+
+need_file() {
+  local path="$1"
+  if [[ ! -e "$path" ]]; then
+    echo "Missing packaged file: $path" >&2
+    exit 1
+  fi
+}
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  help|--help|-h)
+    usage
+    ;;
+  build-libcamera)
+    need_file "$APP_DIR/01-build-libcamera.sh"
+    exec "$APP_DIR/01-build-libcamera.sh" "$@"
+    ;;
+  direct|enable-direct)
+    need_file "$APP_DIR/redrix-camera-direct-pipewire.sh"
+    exec "$APP_DIR/redrix-camera-direct-pipewire.sh" "$@"
+    ;;
+  status)
+    need_file "$APP_DIR/redrix-camera-direct-pipewire.sh"
+    exec "$APP_DIR/redrix-camera-direct-pipewire.sh" --status "$@"
+    ;;
+  verify)
+    need_file "$APP_DIR/redrix-camera-direct-pipewire.sh"
+    exec "$APP_DIR/redrix-camera-direct-pipewire.sh" --verify "$@"
+    ;;
+  diagnose)
+    need_file "$APP_DIR/diagnose-camera.sh"
+    exec "$APP_DIR/diagnose-camera.sh" "$@"
+    ;;
+  enable-loopback)
+    need_file "$APP_DIR/06-enable-auto-loopback-camera.sh"
+    exec "$APP_DIR/06-enable-auto-loopback-camera.sh" "$@"
+    ;;
+  stop-loopback)
+    need_file "$APP_DIR/06-enable-auto-loopback-camera.sh"
+    exec "$APP_DIR/06-enable-auto-loopback-camera.sh" --stop "$@"
+    ;;
+  legacy-status)
+    need_file "$APP_DIR/status.sh"
+    exec "$APP_DIR/status.sh" "$@"
+    ;;
+  camera-on)
+    need_file "$APP_DIR/camera-on.sh"
+    exec "$APP_DIR/camera-on.sh" "$@"
+    ;;
+  camera-off)
+    need_file "$APP_DIR/camera-off.sh"
+    exec "$APP_DIR/camera-off.sh" "$@"
+    ;;
+  *)
+    echo "Unknown command: $cmd" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

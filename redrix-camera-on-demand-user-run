@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# redrix-camera-daemon.py reads /etc/default/redrix-camera-relay itself without
+# overriding systemd Environment= values. Do not source it here, because that
+# would replace the service's tested 640x480 loopback settings with older defaults.
+PREFIX="${REDRIX_LIBCAMERA_PREFIX:-/opt/redrix-libcamera}"
+LIBDIR="${REDRIX_LIBCAMERA_LIBDIR:-$PREFIX/lib/x86_64-linux-gnu}"
+
+export PATH="$PREFIX/bin:$PATH"
+export LD_LIBRARY_PATH="$LIBDIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export GST_PLUGIN_PATH="$LIBDIR/gstreamer-1.0${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
+export LIBCAMERA_DATA_DIR="${LIBCAMERA_DATA_DIR:-$PREFIX/share/libcamera}"
+export LIBCAMERA_IPA_MODULE_PATH="${LIBCAMERA_IPA_MODULE_PATH:-$LIBDIR/libcamera/ipa}"
+export LIBCAMERA_IPA_CONFIG_PATH="${LIBCAMERA_IPA_CONFIG_PATH:-${XDG_CONFIG_HOME:-$HOME/.config}/redrix-libcamera/ipa:$PREFIX/share/libcamera/ipa}"
+export LIBCAMERA_IPA_PROXY_PATH="${LIBCAMERA_IPA_PROXY_PATH:-$PREFIX/libexec/libcamera}"
+
+exec "$SCRIPT_DIR/redrix-camera-daemon.py"

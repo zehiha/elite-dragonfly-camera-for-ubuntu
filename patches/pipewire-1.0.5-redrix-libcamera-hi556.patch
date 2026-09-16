@@ -1,0 +1,122 @@
+--- a/spa/plugins/libcamera/libcamera-device.cpp
++++ b/spa/plugins/libcamera/libcamera-device.cpp
+@@ -74,7 +74,7 @@
+ 	const ControlList &props = camera->properties();
+ 
+ 	if (auto model = props.get(properties::Model))
+-		return std::move(model.value());
++		return std::string(model.value());
+ 
+ 	return camera->id();
+ }
+--- a/spa/plugins/libcamera/libcamera-utils.cpp
++++ b/spa/plugins/libcamera/libcamera-utils.cpp
+@@ -133,10 +133,10 @@
+ 		b = &port->buffers[i];
+ 		d = b->outbuf->datas;
+ 
+-		if (SPA_FLAG_IS_SET(b->flags, BUFFER_FLAG_OUTSTANDING)) {
+-			spa_log_debug(impl->log, "queueing outstanding buffer %p", b);
+-			spa_libcamera_buffer_recycle(impl, port, i);
+-		}
++			if (SPA_FLAG_IS_SET(b->flags, BUFFER_FLAG_OUTSTANDING)) {
++				spa_log_debug(impl->log, "dropping outstanding buffer %p", b);
++				SPA_FLAG_CLEAR(b->flags, BUFFER_FLAG_OUTSTANDING);
++			}
+ 		if (SPA_FLAG_IS_SET(b->flags, BUFFER_FLAG_MAPPED)) {
+ 			munmap(SPA_PTROFF(b->ptr, -d[0].mapoffset, void),
+ 					d[0].maxsize - d[0].mapoffset);
+@@ -147,7 +147,10 @@
+ 		d[0].type = SPA_ID_INVALID;
+ 	}
+ 
+-	freeBuffers(impl, port);
++		spa_list_init(&port->queue);
++		spa_ringbuffer_init(&port->ring);
++
++		freeBuffers(impl, port);
+ 	port->n_buffers = 0;
+ 
+ 	return 0;
+@@ -167,6 +170,16 @@
+ 	MAKE_FMT(formats::RGB565_BE, RGB16, video, raw),
+ 	MAKE_FMT(formats::RGB888, RGB, video, raw),
+ 	MAKE_FMT(formats::BGR888, BGR, video, raw),
++#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
++	MAKE_FMT(formats::XRGB8888, BGRx, video, raw),
++	MAKE_FMT(formats::XBGR8888, RGBx, video, raw),
++	MAKE_FMT(formats::RGBX8888, xBGR, video, raw),
++	MAKE_FMT(formats::BGRX8888, xRGB, video, raw),
++	MAKE_FMT(formats::ARGB8888, BGRA, video, raw),
++	MAKE_FMT(formats::ABGR8888, RGBA, video, raw),
++	MAKE_FMT(formats::RGBA8888, ABGR, video, raw),
++	MAKE_FMT(formats::BGRA8888, ARGB, video, raw),
++#else
+ 	MAKE_FMT(formats::XRGB8888, xRGB, video, raw),
+ 	MAKE_FMT(formats::XBGR8888, xBGR, video, raw),
+ 	MAKE_FMT(formats::RGBX8888, RGBx, video, raw),
+@@ -175,6 +188,7 @@
+ 	MAKE_FMT(formats::ABGR8888, ABGR, video, raw),
+ 	MAKE_FMT(formats::RGBA8888, RGBA, video, raw),
+ 	MAKE_FMT(formats::BGRA8888, BGRA, video, raw),
++#endif
+ 
+ 	MAKE_FMT(formats::YUYV, YUY2, video, raw),
+ 	MAKE_FMT(formats::YVYU, YVYU, video, raw),
+@@ -709,10 +723,17 @@
+ 	spa_node_call_ready(&impl->callbacks, SPA_STATUS_HAVE_DATA);
+ }
+ 
++static int mmap_init(struct impl *impl, struct port *port,
++		struct spa_buffer **buffers, uint32_t n_buffers);
++static int spa_libcamera_clear_buffers(struct impl *impl, struct port *port);
++
+ static int spa_libcamera_use_buffers(struct impl *impl, struct port *port,
+ 		struct spa_buffer **buffers, uint32_t n_buffers)
+ {
+-	return -ENOTSUP;
++	if (buffers == NULL || n_buffers == 0)
++		return spa_libcamera_clear_buffers(impl, port);
++
++	return mmap_init(impl, port, buffers, n_buffers);
+ }
+ 
+ static const struct {
+@@ -806,8 +827,12 @@
+ 			if (port->memtype == SPA_DATA_DmaBuf ||
+ 			    port->memtype == SPA_DATA_MemFd) {
+ 				d[j].flags |= SPA_DATA_FLAG_MAPPABLE;
+-				d[j].fd = bufs[i]->planes()[j].fd.get();
+-				spa_log_debug(impl->log, "Got fd = %ld for buffer: #%d", d[j].fd, i);
++					d[j].fd = dup(bufs[i]->planes()[j].fd.get());
++					if (d[j].fd < 0) {
++						spa_log_error(impl->log, "dup: %m");
++						return -errno;
++					}
++					spa_log_debug(impl->log, "Got fd = %ld for buffer: #%d", d[j].fd, i);
+ 				d[j].data = NULL;
+ 				SPA_FLAG_SET(b->flags, BUFFER_FLAG_ALLOCATED);
+ 			}
+@@ -917,6 +942,7 @@
+ static int spa_libcamera_stream_on(struct impl *impl)
+ {
+ 	struct port *port = &impl->out_ports[0];
++	static constexpr float kDefaultGamma = 2.38f;
+ 	int res;
+ 
+ 	if (!port->current_format) {
+@@ -933,7 +959,14 @@
+ 	if ((res = impl->camera->start()) < 0)
+ 		goto error;
+ 
++	if (!impl->ctrls.contains(controls::Gamma.id()))
++		impl->ctrls.set(controls::Gamma, kDefaultGamma);
++
+ 	for (Request *req : impl->pendingRequests) {
++		if (!impl->ctrls.empty()) {
++			req->controls().merge(impl->ctrls);
++			impl->ctrls.clear();
++		}
+ 		if ((res = impl->camera->queueRequest(req)) < 0)
+ 			goto error_stop;
+ 	}
