@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE="redrix-hi556-camera"
-VERSION="${REDRIX_CAMERA_VERSION:-0.1.0}"
+VERSION="${REDRIX_CAMERA_VERSION:-0.1.1}"
 ARCH="${REDRIX_CAMERA_ARCH:-$(dpkg --print-architecture)}"
 MAINTAINER="${REDRIX_CAMERA_MAINTAINER:-zehiha <47032150+zehiha@users.noreply.github.com>}"
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-1789459200}"
@@ -167,7 +167,7 @@ chmod 0644 "$DOC_DIR/copyright"
 cat > "$DOC_DIR/changelog" <<CHANGELOG
 redrix-hi556-camera ($VERSION) unstable; urgency=low
 
-  * Initial local package for the Redrix HI556 Ubuntu camera repair.
+  * Documentation cleanup release for the Redrix HI556 Ubuntu camera repair.
 
  -- $MAINTAINER  $RELEASE_DATE
 CHANGELOG

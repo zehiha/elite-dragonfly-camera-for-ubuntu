@@ -1,18 +1,13 @@
-# Release Notes - v0.1.0
-
-Repository title: Elite Dragonfly Camera for Ubuntu
-
-Suggested GitHub repository slug:
-
-```text
-elite-dragonfly-camera-for-ubuntu
-```
+# Release Notes - v0.1.1
 
 ## Summary
 
-Initial experimental release of AI-assisted camera compatibility tooling for a
+Documentation cleanup release for AI-assisted camera compatibility tooling on a
 real HP Elite Dragonfly Chromebook / Google Redrix system with Intel IPU6 and
 Hynix HI556 on Ubuntu.
+
+No camera behavior changes are intended from `v0.1.0`; this release cleans up
+GitHub-facing documentation and publishes a matching `0.1.1` package asset.
 
 This is not an official HP, Google, Ubuntu, PipeWire, libcamera, OpenAI, or
 OpenClaw project. Use at your own risk.
@@ -59,33 +54,29 @@ files from `https://archive.ubuntu.com/ubuntu/pool/main/p/pipewire/`, verifies
 the source tarball checksums, applies `patches/*.patch`, and builds
 `libspa-libcamera.so` plus `libspa-v4l2.so`.
 
-## Release Asset
+## Download
 
-Attach the generated Debian package as a GitHub Release asset instead of
-committing it to the repository:
+- [redrix-hi556-camera_0.1.1_amd64.deb](https://github.com/zehiha/elite-dragonfly-camera-for-ubuntu/releases/download/v0.1.1/redrix-hi556-camera_0.1.1_amd64.deb)
+- [SHA256SUMS](https://github.com/zehiha/elite-dragonfly-camera-for-ubuntu/releases/download/v0.1.1/SHA256SUMS)
 
-```text
-dist/redrix-hi556-camera_0.1.0_amd64.deb
-```
-
-Current local SHA256:
+Published SHA256:
 
 ```text
-0084428e937861e6e686dcb8a1bdc1fe43958a4bdc3f15a057775d707e0da76d  redrix-hi556-camera_0.1.0_amd64.deb
+4e2083e1d7113085b89240c1db53ad1c7c7aa703834b98329d0654331d46dabf  redrix-hi556-camera_0.1.1_amd64.deb
 ```
 
 Rebuild before publishing if any source file changes:
 
 ```bash
 ./build-deb.sh
-sha256sum dist/redrix-hi556-camera_0.1.0_amd64.deb
-lintian dist/redrix-hi556-camera_0.1.0_amd64.deb
+sha256sum dist/redrix-hi556-camera_0.1.1_amd64.deb
+lintian dist/redrix-hi556-camera_0.1.1_amd64.deb
 ```
 
 ## Install
 
 ```bash
-sudo apt install ./redrix-hi556-camera_0.1.0_amd64.deb
+sudo apt install ./redrix-hi556-camera_0.1.1_amd64.deb
 redrix-camera build-libcamera
 redrix-camera direct
 ```

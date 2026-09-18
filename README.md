@@ -9,11 +9,14 @@ OpenClaw project. Read the scripts before running them. They can change user
 PipeWire/WirePlumber configuration, Chrome desktop launch flags, systemd user
 services, v4l2loopback settings, and camera-related runtime paths.
 
-Suggested GitHub repository slug:
+## Download
 
-```text
-elite-dragonfly-camera-for-ubuntu
-```
+Download the current experimental release:
+
+- [redrix-hi556-camera_0.1.1_amd64.deb](https://github.com/zehiha/elite-dragonfly-camera-for-ubuntu/releases/download/v0.1.1/redrix-hi556-camera_0.1.1_amd64.deb)
+- [SHA256SUMS](https://github.com/zehiha/elite-dragonfly-camera-for-ubuntu/releases/download/v0.1.1/SHA256SUMS)
+
+Verify the package against `SHA256SUMS` before installing.
 
 ## Tested Compatibility
 
@@ -107,7 +110,7 @@ If the SPA plugin binaries are missing, `build-deb.sh` calls
 Install the generated package:
 
 ```bash
-sudo apt install ./dist/redrix-hi556-camera_0.1.0_amd64.deb
+sudo apt install ./dist/redrix-hi556-camera_0.1.1_amd64.deb
 ```
 
 The package only installs files. It does not automatically reconfigure the
